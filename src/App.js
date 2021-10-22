@@ -99,7 +99,7 @@ class App extends Component {
     let returnarray = [];
     if(day >= 6){
       for (let i = day - 6; i < day; i += 1) {
-        let full_calendar = '2021' + '-' + (month + 1) + '-' + (i + 1);
+        let full_calendar = '2020' + '-' + (month + 1) + '-' + (i + 1);
         let new_date = new Date(full_calendar );
         if(new_date.getDay() >= 0 && new_date.getDay() <= 6) {
           let object = {};
@@ -125,22 +125,30 @@ class App extends Component {
 
       }
     }
+    console.log(returnarray)
     return returnarray;
 
   }
   returnToday(month = 1, day= 1, state = 'TX'){
     let object = this.state.data_2021[month - 1][day - 1][state];
     let default_Arr = [365747, 4872, 202137.0, 158738.0, 66800.27369964625];
-
+    console.log(month + "-" + day + "-" + state)
     let arr = [];
 
 
     if(object){
+      let confirmed = parseInt(object['Confirmed']),  total_test_result = parseInt(object['Total_Test_Results']);
 
       arr.push(isNaN(parseInt(object['Confirmed'])) ? 0 : parseInt(object['Confirmed']));
       arr.push(  isNaN(parseInt((object['Deaths'])))? 0 : parseInt((object['Deaths']))  );
       arr.push(isNaN(parseInt((object['Recovered'])))? 0 : parseInt((object['Recovered'])));
       arr.push(isNaN(parseInt((object['Active'])))? 0 : parseInt((object['Active'])));
+      if(isNaN(confirmed) === false && isNaN(total_test_result) === false) {
+        object['Testing_Rate'] = parseInt(parseFloat(confirmed / total_test_result) * 100000);
+
+      } else {
+        object['Testing_Rate'] = '';
+      }
       arr.push(isNaN(parseInt((object['Testing_Rate'])))? 0 : parseInt((object['Testing_Rate'])));
     }
 
@@ -182,7 +190,7 @@ class App extends Component {
     this.state.bar_view["datasets"][0]["data"] =  this.returnToday(1,1,event.target.dataset.name);
 
     this.state.line_view["datasets"] = [];
-    this.state.line_view["datasets"] = this.returnMonth(10,10, event.target.dataset.name);
+    this.state.line_view["datasets"] = this.returnMonth(1,10, event.target.dataset.name);
 
     this.setState({bar_view: this.state.bar_view, line_view: this.state.line_view})
 
