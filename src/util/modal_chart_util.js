@@ -73,33 +73,39 @@ function cleanDatafunc(data2020, data2021, statename){
 
 }
 
-function applyMedianFilter(confirm, test){
-    let confirm_test = {}, confirm_index = {},filter_confirm = [], filter_test = [];
+function filterHelper(data){
+    let valueToIndex = {}, filter = [];
 
-    for(let i = 0; i < confirm.length; i += 1){
-        confirm_test[confirm[i]] = test[i];
-        confirm_index[confirm[i]] = i;
+    for(let i = 0 ; i < data.length; i += 1) {
+        valueToIndex[data[i]] = i;
     }
 
-    for(let i = 0; i < confirm.length; i += 1) {
+    for(let i = 0; i < data.length; i += 1) {
         let push_index = i;
-        if(i + 2 <= confirm.length - 1 ) {
-            let given_confirm = [confirm[i], confirm[i + 1], confirm[i + 2] ];
-            given_confirm.sort();
-            push_index = confirm_index[given_confirm[1]];
-        } else if(i + 1 <= confirm.length - 1){
-            let given_confirm = [confirm[i], confirm[i - 1], confirm[i + 1] ];
-            given_confirm.sort();
-            push_index = confirm_index[given_confirm[1]];
+        if(i + 2 <= data.length - 1 ) {
+            let given_array = [data[i], data[i + 1], data[i + 2] ];
+            given_array.sort();
+            push_index = valueToIndex[given_array[1]];
+        } else if(i + 1 <= data.length - 1){
+            let given_array = [data[i], data[i - 1], data[i + 1] ];
+            given_array.sort();
+            push_index = valueToIndex[given_array[1]];
         }else {
-            let given_confirm = [confirm[i - 1], confirm[i - 2], confirm[i] ];
-            given_confirm.sort();
-            push_index = confirm_index[given_confirm[1]];
+            let given_array = [data[i - 1], data[i - 2], data[i] ];
+            given_array.sort();
+            push_index = valueToIndex[given_array[1]];
 
         }
-        filter_confirm.push(confirm[push_index]);
-        filter_test.push(confirm_test[confirm[push_index]])
+        filter.push(data[push_index]);
     }
+    return filter;
+}
+
+function applyMedianFilter(confirm, test){
+    let filter_confirm = [], filter_test = [];
+
+    filter_confirm = filterHelper(confirm);
+    filter_test = filterHelper(test);
 
     return [filter_confirm, filter_test];
 
