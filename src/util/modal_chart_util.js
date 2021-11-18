@@ -21,22 +21,23 @@ function cleanDatafunc(data2020, data2021, statename){
             let dataState = data2020[i - 1][j - 1][statename];
             if(dataState){
                 const numConfirmed = canpraseint(dataState['Confirmed']);
-                let numTests = canpraseint(dataState['Total_Test_Results']), found = false;
+                let numTests = canpraseint(dataState['Total_Test_Results']);
+                // let found = false;
                 if(!numTests){
                     numTests = canpraseint(dataState['People_Tested']);
-                    found = true;
+                    // found = true;
                 }
                 if(a === 0 && b === 0 && numConfirmed && numTests){
                     a = numConfirmed;
                     b = numTests;
                 } else if(numConfirmed > 0 && numTests > 0){
                     data2020[i - 1][j - 1][statename]['Confirmed'] = String(numConfirmed - a);
-                    if(found) { // in 2020 csv, there will be either People_Tested or Total_Test_Results field name
-                        data2020[i - 1][j - 1][statename]['People_Tested'] = String(numTests - b);
-                    } else {
-                        data2020[i - 1][j - 1][statename]['Total_Test_Results'] = String(numTests - b);
-                    }
-
+                    // if(found) { // in 2020 csv, there will be either People_Tested or Total_Test_Results field name
+                    //     data2020[i - 1][j - 1][statename]['People_Tested'] = String(numTests - b);
+                    // } else {
+                    //     data2020[i - 1][j - 1][statename]['Total_Test_Results'] = String(numTests - b);
+                    // }
+                    data2020[i - 1][j - 1][statename]['Total_Test_Results'] = String(numTests - b);
                     a = numConfirmed;
                     b = numTests;
                 } else {
@@ -53,7 +54,12 @@ function cleanDatafunc(data2020, data2021, statename){
             let dataState = data2021[i - 1][j - 1][statename];
             if(dataState){
                 const numConfirmed = canpraseint(dataState['Confirmed']);
-                const numTests = canpraseint(dataState['Total_Test_Results']);
+                let numTests = canpraseint(dataState['Total_Test_Results']);
+                // let found = false;
+                if(!numTests){
+                    numTests = canpraseint(dataState['People_Tested']);
+                    // found = true;
+                }
                 if(numConfirmed > 0 && numTests > 0){
                     data2021[i - 1][j - 1][statename]['Confirmed'] = String(numConfirmed - a);
                     data2021[i - 1][j - 1][statename]['Total_Test_Results'] = String(numTests - b);
@@ -73,39 +79,29 @@ function cleanDatafunc(data2020, data2021, statename){
 
 }
 
-function filterHelper(data){
-    let valueToIndex = {}, filter = [];
-
-    for(let i = 0 ; i < data.length; i += 1) {
-        valueToIndex[data[i]] = i;
-    }
+function filterHelper(data, dayNum){
+    let filter = [];
 
     for(let i = 0; i < data.length; i += 1) {
-        let push_index = i;
-        if(i + 2 <= data.length - 1 ) {
-            let given_array = [data[i], data[i + 1], data[i + 2] ];
-            given_array.sort();
-            push_index = valueToIndex[given_array[1]];
-        } else if(i + 1 <= data.length - 1){
-            let given_array = [data[i], data[i - 1], data[i + 1] ];
-            given_array.sort();
-            push_index = valueToIndex[given_array[1]];
-        }else {
-            let given_array = [data[i - 1], data[i - 2], data[i] ];
-            given_array.sort();
-            push_index = valueToIndex[given_array[1]];
+        let push_value = data[i], given_array = [];;
 
+        for(let j = i; j <= i + dayNum; j += 1){
+            given_array.push(data[j % (data.length - 1)]);
         }
-        filter.push(data[push_index]);
+
+        given_array.sort();
+        push_value = given_array[parseInt(dayNum/2)]
+        filter.push(push_value);
+
     }
     return filter;
 }
 
-function applyMedianFilter(confirm, test){
+function applyMedianFilter(confirm, test, dayNum){
     let filter_confirm = [], filter_test = [];
 
-    filter_confirm = filterHelper(confirm);
-    filter_test = filterHelper(test);
+    filter_confirm = filterHelper(confirm, 3);
+    filter_test = filterHelper(test, 3);
 
     return [filter_confirm, filter_test];
 
@@ -142,7 +138,7 @@ export function semiAnnuallyView(data2020, data2021, statename, useYear2020, sem
                 yAxisID: 'A',
                 backgroundColor: returnBorderColor(todaydata, statename),
                 borderColor: returnBorderColor(todaydata, statename),
-                borderWidth: 3,
+                borderWidth: 2,
                 pointRadius: 0,
                 data: applyMedianFilter(data, testResultData)[0]
             },
@@ -154,7 +150,7 @@ export function semiAnnuallyView(data2020, data2021, statename, useYear2020, sem
                 tension: 0.4,
                 backgroundColor: 'rgb(255, 99, 132)',
                 borderColor: 'rgb(255, 99, 132)',
-                borderWidth: 3,
+                borderWidth: 2,
                 pointRadius: 0,
                 data: applyMedianFilter(data, testResultData)[1]
             }
@@ -253,7 +249,7 @@ export function quarterView(data2020, data2021, statename, useYear2020, quarter,
                 yAxisID: 'A',
                 backgroundColor: returnBorderColor(todaydata, statename),
                 borderColor: returnBorderColor(todaydata, statename),
-                borderWidth: 3,
+                borderWidth: 2,
                 pointRadius: 0,
                 data: applyMedianFilter(data, testResultData)[0]
             },
@@ -265,7 +261,7 @@ export function quarterView(data2020, data2021, statename, useYear2020, quarter,
                 tension: 0.4,
                 backgroundColor: 'rgb(255, 99, 132)',
                 borderColor: 'rgb(255, 99, 132)',
-                borderWidth: 3,
+                borderWidth: 2,
                 pointRadius: 0,
                 data: applyMedianFilter(data, testResultData)[1]
             }
@@ -390,7 +386,7 @@ export function historicalView(data2020, data2021, statename, todaydata) {
                 yAxisID: 'A',
                 backgroundColor: returnBorderColor(todaydata, statename),
                 borderColor: returnBorderColor(todaydata, statename),
-                borderWidth: 3,
+                borderWidth: 2,
                 pointRadius: 0,
                 data: applyMedianFilter(data, testResultData)[0],
             },
@@ -402,7 +398,7 @@ export function historicalView(data2020, data2021, statename, todaydata) {
                 tension: 0.4,
                 backgroundColor: 'rgb(255, 99, 132)',
                 borderColor: 'rgb(255, 99, 132)',
-                borderWidth: 3,
+                borderWidth: 2,
                 pointRadius: 0,
                 data: applyMedianFilter(data, testResultData)[1]
             }
