@@ -5,73 +5,74 @@ import { csv } from "d3-fetch";
 
 const geoUrl = "https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json";
 
+const date = "5/27/21"
+
+
 const MapChart = ({setTooltipContent}) => {
     const [data, setData] = useState([]);
+    const [county, setCounty] = useState([]);
+    const [date, changeDate] = useState("5/27/21")
+       useEffect(() => {
+            csv("/unemployment-by-county-2017.csv").then(counties => {
+                setData(counties);
+            });
+        }, []);
+        useEffect(() => {
+            csv("/TS_TX_county.csv").then(counties => {
+                   setCounty(counties);
+            });
+        }, []);
 
-    useEffect(() => {
-        // https://www.bls.gov/lau/
-        csv("/unemployment-by-county-2017.csv").then(counties => {
-            setData(counties);
-        });
-    }, []);
 
-    // const colorScale = scaleQuantile()
-    //   .domain(data.map(d => d.unemployment_rate))
-    //   .range([
-    //     "#ffedea",
-    //     "#ffcec5",
-    //     "#ffad9f",
-    //     "#ff8a75",
-    //     "#ff5533",
-    //     "#e2492d",
-    //     "#be3d26",
-    //     "#9a311f",
-    //     "#782618"
-    //   ]);
 
     return (
+        <div>
+        <input type="text"  id="dateInput"></input><button onClick = {() => changeDate(document.getElementById("dateInput").value)}>update</button>
         <ComposableMap data-tip="" projection="geoAlbersUsa" projectionConfig={{ scale: 1000 }}>
-            <ZoomableGroup>
-                <Geographies geography={geoUrl}>
-                    {({ geographies }) =>
-                        geographies.map(geo => {
-                            var cur = data.find(s => s.id === geo.id);
-                            return (
-                                <Geography
-                                    key={geo.rsmKey}
-                                    geography={geo}
-                                    onMouseEnter={() => {
+                    <ZoomableGroup>
+                        <Geographies geography={geoUrl}>
+                            {({ geographies }) =>
+                                geographies.map(geo => {
+                                    var cur = data.find(s => s.id === geo.id);
+                                    var d = county.find(c => (c.County === geo.properties.name) && (c.Date === date));
+                                    console.log(date)
+                                    return (
 
-                                        if(cur) {
-                                            setTooltipContent(cur.name);
-                                        }
+                                        <Geography
+                                            key={geo.rsmKey}
+                                            geography={geo}
+                                            onMouseEnter={() => {
 
-
-                                    }}
-                                    onMouseLeave={() => {
-                                        setTooltipContent("");
-                                    }}
-                                    style={{
-
-                                        hover: {
-                                            fill: "#F53",
-                                            outline: "none"
-                                        },
-                                        pressed: {
-                                            fill: "#E42",
-                                            outline: "none"
-                                        }
-                                    }}
-                                    fill = "#D6D6DA"
+                                            if(d ) {
+                                                setTooltipContent(cur.name + "    " + d["Confirmed Cases"]);
+                                            }
 
 
-                                />
-                            );
-                        })
-                    }
-                </Geographies>
-            </ZoomableGroup>
-        </ComposableMap>
+                                            }}
+                                            onMouseLeave={() => {
+                                                setTooltipContent("");
+                                            }}
+                                            style={{
+
+                                                hover: {
+                                                    fill: "#F53",
+                                                    outline: "none"
+                                                },
+                                                pressed: {
+                                                    fill: "#E42",
+                                                    outline: "none"
+                                                }
+                                            }}
+                                            fill = "#D6D6DA"
+
+
+                                        />
+                                    );
+                                })
+                            }
+                        </Geographies>
+                    </ZoomableGroup>
+                </ComposableMap></div>
     );
 };
 
