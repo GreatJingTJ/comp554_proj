@@ -2,7 +2,8 @@ import USAMap from "react-usa-map";
 import React, { Component } from "react";
 import {Button, Confirm, Modal, Image, Header, Segment, SegmentGroup, } from 'semantic-ui-react'
 import "./mainview.css"
-
+import faker from 'faker'
+import _ from 'lodash'
 import {pad, states_map, generateColorStateMap, request_data_by_state, canpraseint} from "../util/util_func"
 import { SegmentedControl } from 'segmented-control'
 import {historicalView, semiAnnuallyView, todayBarView, quarterView} from '../util/modal_chart_util'
@@ -10,6 +11,12 @@ import Multiselect from 'multiselect-react-dropdown';
 import { Dropdown, Menu } from 'semantic-ui-react'
 import Select from 'react-select';
 import {searchChart} from "../util/search_chart_util";
+import {
+    simulateCasesAndTestsChart,
+    simulateCasesChart,
+    simulateChart, simulateMovingAverageChart,
+    simulateTestsChart
+} from "../util/simulate_chart_util";
 
 const map_get_full = states_map()
 
@@ -54,15 +61,21 @@ export default class MainView  extends Component{
             selectedValue:[],
             selectYearInSearch:2,
 
+            select_day_list:[],
+            selectedStateValue:"",
+
             selectYearInQuarter: '2021',
             selectQuarterInQuarter: "Fall",
             selectYearInSemiannually: '2021',
             selectSemesterInSemiannually: "Fall",
+            selectedShiftDay: 0,
         }
         //onSelect
         this.onSelect = this.onSelect.bind(this);
+
         //onRemove
         this.onRemove = this.onRemove.bind(this);
+
     }
 
     componentDidMount() {
@@ -304,6 +317,8 @@ export default class MainView  extends Component{
 
     showMainTab(){
         switch (this.state.main_tab){
+            case 30:
+                return this.simulateView()
             case 20:
                 return this.mainSearchView()
             default:
@@ -328,7 +343,8 @@ export default class MainView  extends Component{
     }
 
     setMainTab(value){
-        this.setState({main_tab: value, select_state_list:[]})
+        this.setState({main_tab: value, })
+        this.setState({select_state_list:[], select_day_list:[]})
     }
 
 
@@ -392,7 +408,7 @@ export default class MainView  extends Component{
         } else {
             this.state.selectText = "Select...";
         }
-        this.setState({selectText: this.state.selectText, select_state_list: selectedList})
+        this.setState({selectText: this.state.selectText, select_day_list:[],select_state_list: selectedList})
     }
 
     onRemove(selectedList, removedItem) {
@@ -401,14 +417,17 @@ export default class MainView  extends Component{
         } else {
             this.state.selectText = "Select...";
         }
-        this.setState({selectText: this.state.selectText, select_state_list: selectedList})
+        this.setState({selectText: this.state.selectText, select_day_list:[] ,select_state_list: selectedList})
     }
+
+
 
 
 
     searchChartResult(){
         return searchChart(this.state.data_2021, this.state.data_2020, this.state.select_state_list, this.state.selectYearInSearch);
     }
+
 
     mainSearchView(){
 
@@ -435,6 +454,127 @@ export default class MainView  extends Component{
             </div>
         );
     }
+
+
+    handleChangeSelectDay = (e, {value}) => {
+        this.setState({select_day_list: value})
+    }
+
+    handleChangeSelectState = (e, {value}) =>{
+
+        this.setState({selectedStateValue: value})
+    }
+
+    handleChangeSelectShiftDays = (e, {value}) =>{
+
+        this.setState({selectedShiftDay: value})
+    }
+
+
+
+
+    simulateChartRatioResult(){
+        return simulateChart(this.state.data_2021, this.state.data_2020, this.state.select_day_list, this.state.selectedStateValue, this.state.selectedShiftDay);
+    }
+
+    simulateChartTestsResult(){
+        return simulateTestsChart(this.state.data_2021, this.state.data_2020, this.state.select_day_list, this.state.selectedStateValue, this.state.selectedShiftDay);
+    }
+
+
+
+
+
+
+
+
+
+    simulateChartCasesResult(){
+        return simulateCasesChart(this.state.data_2021, this.state.data_2020, this.state.select_day_list, this.state.selectedStateValue, this.state.selectedShiftDay);
+    }
+
+    simulateMovingAverageResult(){
+        return simulateMovingAverageChart(this.state.data_2021, this.state.data_2020, this.state.select_day_list, this.state.selectedStateValue, this.state.selectedShiftDay);
+    }
+
+    simulateView(){
+        let simulateOptions = [];
+        simulateOptions.push({key: 0, text: "Original", value: 0});
+        for(let i = 3; i <= 30; i += 1) {
+            simulateOptions.push({key: i, text: i + " Days", value: i});
+        }
+
+
+        const addressDefinitions = faker.definitions.address
+        const stateOptions = _.map(addressDefinitions.state, (state, index) => ({
+            key: addressDefinitions.state_abbr[index],
+            text: state,
+            value: addressDefinitions.state_abbr[index],
+        }))
+
+
+
+
+
+
+        let shiftDayOptions = [];
+
+        for(let i = 0; i <= 5; i += 1) {
+            shiftDayOptions.push(
+                {
+                    key: i,
+                    text: i,
+                    value: i,
+                }
+            );
+        }
+
+        return (
+            <div>
+                <div style={{marginLeft: "50px", marginRight: "50px"}}>
+                    <div>
+                        <Dropdown placeholder='State' search selection options={stateOptions} onChange={this.handleChangeSelectState.bind(this)} />
+                        <Dropdown placeholder='Shift Days' search selection options={shiftDayOptions} onChange={this.handleChangeSelectShiftDays.bind(this)} />
+                    </div>
+                    <Dropdown
+                        placeholder='n day filter'
+                        fluid
+                        multiple
+                        search
+                        selection
+                        options={simulateOptions}
+                        onChange={this.handleChangeSelectDay.bind(this)}
+                    />
+                </div>
+                <br/>
+                <div className="row">
+                    <div className="column">
+
+                        {this.simulateChartTestsResult()}
+
+                    </div>
+                    <div className="column">
+                        {this.simulateChartCasesResult()}
+
+                    </div>
+
+                </div>
+                <br/>
+                <div className="row">
+                    <div className="column">
+                        {this.simulateChartRatioResult()}
+                    </div>
+                    <div className="column">
+                        {this.simulateMovingAverageResult()}
+                    </div>
+
+                </div>
+
+            </div>
+
+
+        );
+    }
     /***********************functions used for map*/
 
 
@@ -454,6 +594,7 @@ export default class MainView  extends Component{
                         options={[
                             { label: "Map View", value: 10, default: true },
                             { label: "Search View", value: 20 },
+                            { label: "Simulate View", value: 30 },
                         ]}
                         setValue={newValue => this.setMainTab(newValue)}
                         style ={{width: 450, color: '#191970', fontSize: '15px', borderRadius: "10px 10px 10px 10px",}}

@@ -85,8 +85,17 @@ function filterHelper(data, dayNum){
     for(let i = 0; i < data.length; i += 1) {
         let push_value = data[i], given_array = [];;
 
-        for(let j = i; j <= i + dayNum; j += 1){
-            given_array.push(data[j % (data.length - 1)]);
+
+        for(let j = i; j < i + dayNum; j += 1){
+            let value = data[j % (data.length)]
+            if(value > 300000) {
+                while(value >= 100000){
+                    value = parseInt(value / 10);
+                }
+
+            }
+            given_array.push(value);
+
         }
 
         given_array.sort();
@@ -97,11 +106,11 @@ function filterHelper(data, dayNum){
     return filter;
 }
 
-function applyMedianFilter(confirm, test, dayNum){
+function applyMedianFilter(confirm, test, dayNum = 3){
     let filter_confirm = [], filter_test = [];
 
-    filter_confirm = filterHelper(confirm, 3);
-    filter_test = filterHelper(test, 3);
+    filter_confirm = filterHelper(confirm, dayNum);
+    filter_test = filterHelper(test, dayNum);
 
     return [filter_confirm, filter_test];
 
@@ -131,7 +140,7 @@ export function semiAnnuallyView(data2020, data2021, statename, useYear2020, sem
         labels: label_list,
         datasets: [
             {
-                label: 'Cases Per Test',
+                label: 'Percent Positive',
                 cubicInterpolationMode: 'monotone',
                 fill: false,
                 tension: 0.4,
@@ -156,6 +165,9 @@ export function semiAnnuallyView(data2020, data2021, statename, useYear2020, sem
             }
         ]
     };
+    let x_axis_container = {};
+    let month_array = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
+
     return (<div>
         <p>Recent semi-annually data in {state_get_full[statename]}</p>
         <Line
@@ -194,6 +206,27 @@ export function semiAnnuallyView(data2020, data2021, statename, useYear2020, sem
                             //     return String((parseInt(value) / 100)).substring(0,3) + "K"
                             // }
                         },
+                    },
+                    x: {
+                        ticks: {
+                            // For a category axis, the val is the index so the lookup via getLabelForValue is needed
+                            callback: function(val, index, ticks) {
+
+                                let label = this.getLabelForValue(val);
+                                let split_array = label.split("-");
+                                let year = split_array[0],month = parseInt(split_array[1]) - 1;
+                                if(!x_axis_container[year + month]){
+                                    x_axis_container[year + month] = 1;
+                                    return month_array[month] + " " + year;
+                                }
+
+                                if(index === ticks.length - 1) {
+                                    x_axis_container = {};
+                                }
+
+                            },
+
+                        }
                     }
                 },
             }}
@@ -242,7 +275,7 @@ export function quarterView(data2020, data2021, statename, useYear2020, quarter,
         labels: label_list,
         datasets: [
             {
-                label: 'Cases Per Test',
+                label: 'Percent Positive',
                 cubicInterpolationMode: 'monotone',
                 fill: false,
                 tension: 0.4,
@@ -267,6 +300,8 @@ export function quarterView(data2020, data2021, statename, useYear2020, quarter,
             }
         ]
     };
+    let x_axis_container = {};
+    let month_array = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
 
     return (<div>
         <p>Recent quarterly data in {state_get_full[statename]}</p>
@@ -306,6 +341,26 @@ export function quarterView(data2020, data2021, statename, useYear2020, quarter,
                             //     return String((parseInt(value) / 100)).substring(0,3) + "K"
                             // }
                         },
+                    },
+                    x: {
+                        ticks: {
+                            // For a category axis, the val is the index so the lookup via getLabelForValue is needed
+                            callback: function(val, index, ticks) {
+
+                                let label = this.getLabelForValue(val);
+                                let split_array = label.split("-");
+                                let year = split_array[0], month = parseInt(split_array[1]) - 1;
+                                if(!x_axis_container[year + month]){
+                                    x_axis_container[year + month] = 1;
+                                    return month_array[month] + " " + year;
+                                }
+                                if(index === ticks.length - 1) {
+                                    x_axis_container = {};
+                                }
+
+                            },
+
+                        }
                     }
                 },
             }}
@@ -368,18 +423,19 @@ export function historicalView(data2020, data2021, statename, todaydata) {
     const datemap = {1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31};
     let mydata2020 = JSON.parse(JSON.stringify(data2020)), mydata2021 = JSON.parse(JSON.stringify(data2021));
     let cleanData = cleanDatafunc( mydata2020, mydata2021, statename);
+    let result_2020 = genertateDataAndLabel(4, 12, datemap,cleanData[0], statename, '2020');
+    let result_2021 = genertateDataAndLabel(1, 12, datemap,cleanData[1], statename, '2021');
+    label_list = result_2020[0].concat(result_2021[0]);
+    data = result_2020[1].concat(result_2021[1]);
+    testResultData = result_2020[2].concat(result_2021[2]);
 
-    let result = genertateDataAndLabel(1, 12, datemap,cleanData[1], statename, '2021');
-    label_list = result[0];
-    data = result[1];
-    testResultData = result[2];
-
+    let after_applied_filter = applyMedianFilter(data, testResultData);
 
     const plotData = {
         labels: label_list,
         datasets: [
             {
-                label: 'Cases Per Test',
+                label: 'Percent Positive',
                 cubicInterpolationMode: 'monotone',
                 fill: false,
                 tension: 0.4,
@@ -388,7 +444,7 @@ export function historicalView(data2020, data2021, statename, todaydata) {
                 borderColor: returnBorderColor(todaydata, statename),
                 borderWidth: 2,
                 pointRadius: 0,
-                data: applyMedianFilter(data, testResultData)[0],
+                data: after_applied_filter[0],
             },
             {
                 label: 'Tests',
@@ -400,14 +456,18 @@ export function historicalView(data2020, data2021, statename, todaydata) {
                 borderColor: 'rgb(255, 99, 132)',
                 borderWidth: 2,
                 pointRadius: 0,
-                data: applyMedianFilter(data, testResultData)[1]
+                data: after_applied_filter[1]
             }
 
         ]
     };
 
+
+    let x_axis_container = {};
+    let month_array = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
+
     return (<div>
-        <p>Historical Cases Per Test (Number of Confirmed Cases / Number of Tests) in {state_get_full[statename]}</p>
+        <p>Historical Percent Positive (Number of Confirmed Cases / Number of Tests) in {state_get_full[statename]}</p>
         <Line
             data={plotData}
             options={{
@@ -444,6 +504,28 @@ export function historicalView(data2020, data2021, statename, todaydata) {
                             //     return String((parseInt(value) / 100)).substring(0,3) + "K"
                             // }
                         },
+                    },
+                    x: {
+                        ticks: {
+                            // For a category axis, the val is the index so the lookup via getLabelForValue is needed
+                            callback: function(val, index, ticks) {
+
+                                let label = this.getLabelForValue(val);
+
+                                let split_array = label.split("-");
+                                let year = split_array[0], month = parseInt(split_array[1]) - 1;
+                                if(!x_axis_container[year + month]){
+                                    x_axis_container[year + month] = 1;
+                                    return month_array[month] + " " + year;
+                                }
+                                if(index === ticks.length - 1) {
+                                    x_axis_container = {};
+                                }
+
+
+                            },
+
+                        }
                     }
                 },
             }}
@@ -462,15 +544,40 @@ function returnBorderColor(todaydata, statename){
     return border_color;
 }
 
-function genertateDataAndLabel(month_start, month_end, datemap, data_used, statename, useYear2020){
-    let data = [], label_list = [], number_tests_list = [];
+function nextNDays(year, month, day, n, datemap) {
+    day += n;
+    if (day > datemap[month]) {
+        day -= datemap[month];
+        month += 1;
+    }
+    if (month > 12) {
+        month = 1;
+        year += 1;
+    }
+    return {year, month, day};
+}
+
+
+export function genertateDataAndLabel(month_start, month_end, datemap, data_used, statename, useYear2020, shiftDay = 0, otherData = ""){
+    let data = [], label_list = [], num_confirmed_list = [], number_tests_list = [];
+    const year = canpraseint(useYear2020);
     for(let i = month_start; i <= month_end; i += 1){
         let monthPadded = pad(i);
         for(let j = 1; j < datemap[i]; j += 1) {
             const stateData = data_used[i - 1][j - 1][statename];
+
+            const dateThreeDaysAfter = nextNDays(year, i, j, shiftDay, datemap);
+            const stateDataThreeDaysAfter = year === dateThreeDaysAfter.year ?
+                data_used[dateThreeDaysAfter.month - 1][dateThreeDaysAfter.day - 1][statename] :
+                otherData[dateThreeDaysAfter.month - 1][dateThreeDaysAfter.day - 1][statename];
+
+            if (!stateDataThreeDaysAfter) {
+                continue;
+            }
+
             let dayPadded = pad(j);
             if(stateData) {
-                const numConfirmed = canpraseint(stateData['Confirmed']);
+                const numConfirmed = canpraseint(stateDataThreeDaysAfter['Confirmed']);
 
                 let numTests = canpraseint(stateData['Total_Test_Results']);
                 if(!numTests){
@@ -479,7 +586,8 @@ function genertateDataAndLabel(month_start, month_end, datemap, data_used, state
                 if (numConfirmed && numTests) {
                     if(numConfirmed> 0 && numTests > 0) {
                         data.push(numConfirmed / numTests);
-                        number_tests_list.push(numTests)
+                        num_confirmed_list.push(numConfirmed);
+                        number_tests_list.push(numTests);
                         label_list.push(`${useYear2020}-${monthPadded}-${dayPadded}`)
                     }
 
@@ -488,5 +596,5 @@ function genertateDataAndLabel(month_start, month_end, datemap, data_used, state
         }
     }
 
-    return [label_list, data, number_tests_list];
+    return [label_list, data, num_confirmed_list, number_tests_list];
 }

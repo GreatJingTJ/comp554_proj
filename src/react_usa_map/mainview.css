@@ -20,3 +20,14 @@ path:hover {
     border: 2px solid #191970;
 }
 
+.column {
+    float: left;
+    width: 50%;
+}
+
+/* Clear floats after the columns */
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
