@@ -87,104 +87,138 @@ export default class MainView  extends Component{
 
     /***********************functions used for map*/
 
-    requestAllData(){
-        let datemap = {1: 31, 2: 28, 3:31, 4:30, 5:31, 6:30, 7: 31, 8:31, 9:30, 10:31, 11:30, 12:31};
-        let list_map = [], map_parsed = {}, a = [];
-        for(let i = 1 ; i <= 12; i += 1) {
-            let month = pad(i);
+    async requestAllData(){
+        // let datemap = {1: 31, 2: 28, 3:31, 4:30, 5:31, 6:30, 7: 31, 8:31, 9:30, 10:31, 11:30, 12:31};
+        // let list_map = [], map_parsed = {}, a = [];
+        // for(let i = 1 ; i <= 12; i += 1) {
+        //     let month = pad(i);
 
-            for(let j = 1; j <= datemap[i]; j += 1) {
-                let day = pad(j);
-                const filename = "./dataset/" + month + "-" + day + "-" + 2021 + ".csv";
+        //     for(let j = 1; j <= datemap[i]; j += 1) {
+        //         let day = pad(j);
+        //         const filename = "./dataset/" + month + "-" + day + "-" + 2021 + ".csv";
 
-                if(i >= 11 || (i === 10 && j >= 15)) {
-                    break;
-                } else {
-                    import(`${filename}`)
-                        .then(async module => {
-                            a = await fetch(module.default)
-                                .then(rs => rs.text())
-                                .then(text => {
+        //         if(i >= 11 || (i === 10 && j >= 15)) {
+        //             break;
+        //         } else {
+        //             import(`${filename}`)
+        //                 .then(async module => {
+        //                     a = await fetch(module.default)
+        //                         .then(rs => rs.text())
+        //                         .then(text => {
 
-                                    let info_list = text.split("\n"), day_map = {};
-                                    let row_identifer = info_list[0].split(",");
-                                    for(let k = 1; k < info_list.length; k += 1) {
-                                        let splited_data = info_list[k].split(",");
-                                        for (let l = 0; l < splited_data.length; l += 1) {
-                                            map_parsed[row_identifer[l]] = splited_data[l];
-                                        }
-                                        map_parsed['Province_State'] = String(splited_data[0]);
-                                        let state_name = map_parsed['Province_State'];
-                                        if(state_name) {
+        //                             let info_list = text.split("\n"), day_map = {};
+        //                             let row_identifer = info_list[0].split(",");
+        //                             for(let k = 1; k < info_list.length; k += 1) {
+        //                                 let splited_data = info_list[k].split(",");
+        //                                 for (let l = 0; l < splited_data.length; l += 1) {
+        //                                     map_parsed[row_identifer[l]] = splited_data[l];
+        //                                 }
+        //                                 map_parsed['Province_State'] = String(splited_data[0]);
+        //                                 let state_name = map_parsed['Province_State'];
+        //                                 if(state_name) {
 
-                                            for(const [key, value] of Object.entries(map_get_full)){
-                                                if(state_name === value){
-                                                    day_map[key] = map_parsed;
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                        map_parsed = {};
+                                            // for(const [key, value] of Object.entries(map_get_full)){
+        //                                         if(state_name === value){
+        //                                             day_map[key] = map_parsed;
+        //                                             break;
+        //                                         }
+        //                                     }
+        //                                 }
+        //                                 map_parsed = {};
 
-                                    }
-
-
-                                    this.state.data_2021[i - 1][j - 1] = day_map;
-                                });
-                        })
-
-                }
+        //                             }
 
 
-            }
-            for(let j = 1; j <= datemap[i]; j += 1) {
-                let day = pad(j);
-                const filename = "./dataset/" + month + "-" + day + "-" + 2020 + ".csv";
+        //                             this.state.data_2021[i - 1][j - 1] = day_map;
+        //                         });
+        //                 })
 
-                if((i == 4 && j >= 12) || i >= 5){
-                    import(`${filename}`)
-                        .then(async module => {
-                            a = await fetch(module.default)
-                                .then(rs => rs.text())
-                                .then(text => {
-
-                                    let info_list = text.split("\n"), day_map = {};
-                                    let row_identifer = info_list[0].split(",");
-                                    for(let k = 1; k < info_list.length; k += 1) {
-                                        let splited_data = info_list[k].split(",");
-                                        for (let l = 0; l < splited_data.length; l += 1) {
-                                            map_parsed[row_identifer[l]] = splited_data[l];
-                                        }
-                                        map_parsed['Province_State'] = String(splited_data[0]);
-                                        let state_name = map_parsed['Province_State'];
-                                        if(state_name) {
-
-                                            for(const [key, value] of Object.entries(map_get_full)){
-                                                if(state_name === value){
-                                                    day_map[key] = map_parsed;
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                        map_parsed = {};
-
-                                    }
+        //         }
 
 
-                                    this.state.data_2020[i - 1][j - 1] = day_map;
-                                });
-                        })
-                }
+        //     }
+        //     for(let j = 1; j <= datemap[i]; j += 1) {
+        //         let day = pad(j);
+        //         const filename = "./dataset/" + month + "-" + day + "-" + 2020 + ".csv";
+
+        //         if((i == 4 && j >= 12) || i >= 5){
+        //             import(`${filename}`)
+        //                 .then(async module => {
+        //                     a = await fetch(module.default)
+        //                         .then(rs => rs.text())
+        //                         .then(text => {
+
+        //                             let info_list = text.split("\n"), day_map = {};
+        //                             let row_identifer = info_list[0].split(",");
+        //                             for(let k = 1; k < info_list.length; k += 1) {
+        //                                 let splited_data = info_list[k].split(",");
+        //                                 for (let l = 0; l < splited_data.length; l += 1) {
+        //                                     map_parsed[row_identifer[l]] = splited_data[l];
+        //                                 }
+        //                                 map_parsed['Province_State'] = String(splited_data[0]);
+        //                                 let state_name = map_parsed['Province_State'];
+        //                                 if(state_name) {
+
+        //                                     for(const [key, value] of Object.entries(map_get_full)){
+        //                                         if(state_name === value){
+        //                                             day_map[key] = map_parsed;
+        //                                             break;
+        //                                         }
+        //                                     }
+        //                                 }
+        //                                 map_parsed = {};
+
+        //                             }
 
 
-            }
+        //                             this.state.data_2020[i - 1][j - 1] = day_map;
+        //                         });
+        //                 })
+        //         }
 
 
-        }
+        //     }
+
+
+        // }
+        console.log("start");
+        const response = await fetch('http://192.168.1.72:8888/whole?state=Texas', {
+            method: 'GET', // The method
+            mode: 'cors', // It can be no-cors, cors, same-origin
+        });
+        console.log(response);
+        console.log("GET finish");
+        const data = await response.json();
+        console.log(data);
+        console.log(data["2020"]);
+        this.state.data_2020 = data["2020"];
+        this.state.data_2021 = data["2021"];
+        console.log(this.state.data_2020);
+        console.log(this.state.data_2021);
+
+        // await fetch('http://192.168.1.72:8888/whole?state=Texas', {
+        // method: 'GET', // The method
+        // mode: 'cors', // It can be no-cors, cors, same-origin
+        // }).then(async function(response) {
+        //     // The response is a Response instance.
+        //     // You parse the data into a useable format using `.json()`
+        //     console.log(response);
+        //     console.log(response.body.json());
+        //     console.log("to json");
+        //     return response.body.json();
+        // }).
+        // then(async function(data) {
+        //     // `data` is the parsed version of the JSON returned from the above endpoint.
+        //     console.log("receive data success");
+        //     console.log(data);
+        //     this.state.data_2020 = data["2020"];
+        //     this.state.data_2021 = data["2021"];
+        // }).catch(err => {
+        //     // In case it errors.
+        // });
+
 
         this.setState({data_2021: this.state.data_2021, data_2020: this.state.data_2020, loading2:false});
-
-
     }
 
 

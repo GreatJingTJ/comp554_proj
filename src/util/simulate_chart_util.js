@@ -473,6 +473,8 @@ export function simulateTestsChart(data2021, data2020, day_list, stateName, shif
 export function simulateMovingAverageChart(data2021, data2020, day_list, stateName, shiftDay){
     const datemap = {1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31};
     let mydata2020 = JSON.parse(JSON.stringify(data2020)), mydata2021 = JSON.parse(JSON.stringify(data2021));
+    console.log("11111111111111111111111");
+    console.log(mydata2020);
     let cleaned_data = cleanDatafunc(mydata2020,mydata2021, stateName);
     let result_2020 = genertateDataAndLabel(4, 12, datemap,cleaned_data[0], stateName, '2020', shiftDay, cleaned_data[1]);
     let result_2021 = genertateDataAndLabel(1, 12, datemap,cleaned_data[1], stateName, '2021', shiftDay, cleaned_data[1]);
