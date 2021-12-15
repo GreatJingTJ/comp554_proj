@@ -236,7 +236,7 @@ export function semiAnnuallyView(data2020, data2021, statename, useYear2020, sem
 
 
 export function quarterView(data2020, data2021, statename, useYear2020, quarter, todaydata){
-    console.log("quarterView" + useYear2020 + quarter)
+
 
     let quarter_map= {
         "Winter": [12, 2],
@@ -389,6 +389,10 @@ export function todayBarView(select_data, statename){
         let confirmed = canpraseint(state_data_row['Confirmed']),  total_test_result = canpraseint(state_data_row['Total_Test_Results']);
         if(confirmed && total_test_result) {
             let confirm_rate = parseFloat(confirmed/total_test_result);
+            if(state_data_row["ratio"]){
+
+                confirm_rate = state_data_row["ratio"];
+            }
             let percentage_confirm_rate = confirm_rate * 100;
             let ceil_result = Math.ceil(percentage_confirm_rate/10);
             bar_view.datasets[0].data = [confirm_rate];
@@ -537,6 +541,10 @@ function returnBorderColor(todaydata, statename){
     let state_data_row = request_data_by_state( todaydata, states_map()[statename]);
     let confirmed = canpraseint(state_data_row['Confirmed']),  total_test_result = canpraseint(state_data_row['Total_Test_Results']);
     let confirm_rate = parseFloat(confirmed/total_test_result);
+    if(state_data_row["ratio"]){
+
+        confirm_rate = state_data_row["ratio"];
+    }
     let percentage_confirm_rate = confirm_rate * 100;
     let ceil_result = Math.ceil(percentage_confirm_rate/10);
 
@@ -544,7 +552,7 @@ function returnBorderColor(todaydata, statename){
     return border_color;
 }
 
-function nextNDays(year, month, day, n, datemap) {
+export function nextNDays(year, month, day, n, datemap) {
     day += n;
     if (day > datemap[month]) {
         day -= datemap[month];

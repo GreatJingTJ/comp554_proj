@@ -2,6 +2,7 @@ import {canpraseint, pad, request_data_by_state, states_map } from "./util_func"
 import {Bar, Line} from "react-chartjs-2";
 import React from "react";
 import {genertateDataAndLabel, week_list} from "./modal_chart_util";
+import {Button, Popup} from "semantic-ui-react";
 
 export const color_list = ['rgba(255, 99, 132, 1)',
     'rgba(54, 162, 235, 1)',
@@ -83,12 +84,14 @@ function filterHelper(data, dayNum, ratio = false){
     if(dayNum === 0) {
         for(let i = 0; i < data.length; i += 1) {
             let value = data[i];
-            while(value >= 100000){
-                value = parseInt(value / 10);
+            if(value > 1000000) {
+                while(value >= 300000){
+                    value = parseInt(value / 10);
+                }
             }
             if(ratio) {
                 while(value >= 1){
-                    value = parseFloat(value / 2);
+                    value = parseFloat(value / 2.5);
                 }
             }
             filter.push(value);
@@ -103,8 +106,8 @@ function filterHelper(data, dayNum, ratio = false){
 
         for(let j = i; j < i + dayNum; j += 1){
             let value = data[j % (data.length)]
-            if(value > 300000) {
-                while(value >= 100000){
+            if(value > 1000000) {
+                while(value >= 300000){
                     value = parseInt(value / 10);
                 }
             }
@@ -127,7 +130,7 @@ function filterHelper(data, dayNum, ratio = false){
     return filter;
 }
 
-function movingAverageHelper(data, dayNum, ratio = false){
+export function movingAverageHelper(data, dayNum, ratio = false){
     let filter = [];
     if(dayNum === 0) {
 
@@ -146,7 +149,7 @@ function movingAverageHelper(data, dayNum, ratio = false){
             filter.push(value);
 
         }
-        console.log(filter)
+
         return [filter];
     }
     for(let i = 1; i < data.length; i += 1) {
@@ -155,7 +158,7 @@ function movingAverageHelper(data, dayNum, ratio = false){
 
             let value = data[j % (data.length)]
 
-            while(value >= 100000){
+            while(value >= 1000000){
                 value = parseInt(value / 10);
             }
             if(ratio) {
@@ -199,10 +202,13 @@ function getLabel(dayNum, label) {
     }
 }
 
-export function simulateChart(data2021, data2020, day_list, stateName, shiftDay){
+export function simulateChart(data2021, data2020, day_list, stateName, shiftDay, countyMode = false){
     const datemap = {1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31};
     let mydata2020 = JSON.parse(JSON.stringify(data2020)), mydata2021 = JSON.parse(JSON.stringify(data2021));
     let cleaned_data = cleanDatafunc(mydata2020,mydata2021, stateName);
+    if(countyMode){
+        cleaned_data = [data2020, data2021]
+    }
     let result_2020 = genertateDataAndLabel(4, 12, datemap,cleaned_data[0], stateName, '2020', shiftDay, cleaned_data[1]);
     let result_2021 = genertateDataAndLabel(1, 12, datemap,cleaned_data[1], stateName, '2021', shiftDay, cleaned_data[1]);
     let labels_arr = result_2020[0].concat(result_2021[0]);
@@ -237,10 +243,12 @@ export function simulateChart(data2021, data2020, day_list, stateName, shiftDay)
 
     let x_axis_container = {};
     let month_array = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
-
+    //Historical Cases Per Test (Number of Confirmed Cases / Number of Tests)
     return (<div>
-        <div className="ui medium label">Historical Cases Per Test (Number of Confirmed Cases / Number of Tests) Days Filter</div>
-
+        <div className="ui large label">Historical CPT days median Filter</div>
+        <div className="ui button" data-tooltip="CPT stands for Cases Per Test (Number of Confirmed Cases / Number of Tests) " data-position="top left">
+            ?
+        </div>
         <Line
             data={bar_view}
             options={{
@@ -271,7 +279,15 @@ export function simulateChart(data2021, data2020, day_list, stateName, shiftDay)
                                 let year = split_array[0], month = parseInt(split_array[1]) - 1;
                                 if(!x_axis_container[year + month]){
                                     x_axis_container[year + month] = 1;
-                                    return month_array[month] + " " + year;
+                                    let need_return = true, return_label = month_array[month] + " " + year;
+                                    if(countyMode){
+                                        if(month % 3 !== 0) {
+                                            need_return = false;
+                                        }
+                                    }
+                                    if(need_return){
+                                        return return_label;
+                                    }
                                 }
                                 if(index === ticks.length - 1) {
                                     x_axis_container = {};
@@ -291,10 +307,13 @@ export function simulateChart(data2021, data2020, day_list, stateName, shiftDay)
 
 
 
-export function simulateCasesChart(data2021, data2020, day_list, stateName, shiftDay){
+export function simulateCasesChart(data2021, data2020, day_list, stateName, shiftDay, countyMode = false){
     const datemap = {1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31};
     let mydata2020 = JSON.parse(JSON.stringify(data2020)), mydata2021 = JSON.parse(JSON.stringify(data2021));
     let cleaned_data = cleanDatafunc(mydata2020,mydata2021, stateName);
+    if(countyMode){
+        cleaned_data = [data2020, data2021]
+    }
     let result_2020 = genertateDataAndLabel(4, 12, datemap,cleaned_data[0], stateName, '2020', shiftDay, cleaned_data[1]);
     let result_2021 = genertateDataAndLabel(1, 12, datemap,cleaned_data[1], stateName, '2021', shiftDay, cleaned_data[1]);
     let labels_arr = result_2020[0].concat(result_2021[0]);
@@ -324,6 +343,7 @@ export function simulateCasesChart(data2021, data2020, day_list, stateName, shif
         })
         let data_filter = applyMedianFilter(data_arr, [], day);
         bar_view.datasets[i].data = data_filter[0];
+
     }
 
 
@@ -331,7 +351,7 @@ export function simulateCasesChart(data2021, data2020, day_list, stateName, shif
     let month_array = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
 
     return (<div>
-        <div className="ui medium label">Number of Confirmed Cases Days Filter</div>
+        <div className="ui large label">Historical number of confirmed cases days median filter</div>
 
         <Line
             data={bar_view}
@@ -363,7 +383,15 @@ export function simulateCasesChart(data2021, data2020, day_list, stateName, shif
                                 let year = split_array[0], month = parseInt(split_array[1]) - 1;
                                 if(!x_axis_container[year + month]){
                                     x_axis_container[year + month] = 1;
-                                    return month_array[month] + " " + year;
+                                    let need_return = true, return_label = month_array[month] + " " + year;
+                                    if(countyMode){
+                                        if(month % 3 !== 0) {
+                                            need_return = false;
+                                        }
+                                    }
+                                    if(need_return){
+                                        return return_label;
+                                    }
                                 }
                                 if(index === ticks.length - 1) {
                                     x_axis_container = {};
@@ -381,12 +409,15 @@ export function simulateCasesChart(data2021, data2020, day_list, stateName, shif
 
 }
 
-export function simulateTestsChart(data2021, data2020, day_list, stateName, shiftDay){
+export function simulateTestsChart(data2021, data2020, day_list, stateName, shiftDay, countyMode = false){
     const datemap = {1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31};
     let mydata2020 = JSON.parse(JSON.stringify(data2020)), mydata2021 = JSON.parse(JSON.stringify(data2021));
     let cleaned_data = cleanDatafunc(mydata2020,mydata2021, stateName);
-    let result_2020 = genertateDataAndLabel(4, 12, datemap,cleaned_data[0], stateName, '2020', shiftDay, cleaned_data[1]);
-    let result_2021 = genertateDataAndLabel(1, 12, datemap,cleaned_data[1], stateName, '2021', shiftDay, cleaned_data[1]);
+    if(countyMode){
+        cleaned_data = [data2020, data2021]
+    }
+    let result_2020 = genertateDataAndLabel(4, 12, datemap,cleaned_data[0], stateName, '2020', 0, cleaned_data[1]);
+    let result_2021 = genertateDataAndLabel(1, 12, datemap,cleaned_data[1], stateName, '2021', 0, cleaned_data[1]);
     let labels_arr = result_2020[0].concat(result_2021[0]);
     let data_arr = result_2020[3].concat(result_2021[3]);
 
@@ -414,6 +445,8 @@ export function simulateTestsChart(data2021, data2020, day_list, stateName, shif
         })
         let data_filter = applyMedianFilter(data_arr, [], day);
         bar_view.datasets[i].data = data_filter[0];
+
+
     }
 
 
@@ -421,7 +454,7 @@ export function simulateTestsChart(data2021, data2020, day_list, stateName, shif
     let month_array = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
 
     return (<div>
-        <div className="ui medium label">Number of Tests Days Filter</div>
+        <div className="ui large label">Historical number of tests days median filter</div>
         <Line
             data={bar_view}
             options={{
@@ -452,7 +485,15 @@ export function simulateTestsChart(data2021, data2020, day_list, stateName, shif
                                 let year = split_array[0], month = parseInt(split_array[1]) - 1;
                                 if(!x_axis_container[year + month]){
                                     x_axis_container[year + month] = 1;
-                                    return month_array[month] + " " + year;
+                                    let need_return = true, return_label = month_array[month] + " " + year;
+                                    if(countyMode){
+                                        if(month % 3 !== 0) {
+                                            need_return = false;
+                                        }
+                                    }
+                                    if(need_return){
+                                        return return_label;
+                                    }
                                 }
                                 if(index === ticks.length - 1) {
                                     x_axis_container = {};
@@ -470,10 +511,13 @@ export function simulateTestsChart(data2021, data2020, day_list, stateName, shif
 
 }
 
-export function simulateMovingAverageChart(data2021, data2020, day_list, stateName, shiftDay){
+export function simulateMovingAverageChart(data2021, data2020, day_list, stateName, shiftDay, movingAverageDay, countyMode = false){
     const datemap = {1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31};
     let mydata2020 = JSON.parse(JSON.stringify(data2020)), mydata2021 = JSON.parse(JSON.stringify(data2021));
     let cleaned_data = cleanDatafunc(mydata2020,mydata2021, stateName);
+    if(countyMode){
+        cleaned_data = [data2020, data2021]
+    }
     let result_2020 = genertateDataAndLabel(4, 12, datemap,cleaned_data[0], stateName, '2020', shiftDay, cleaned_data[1]);
     let result_2021 = genertateDataAndLabel(1, 12, datemap,cleaned_data[1], stateName, '2021', shiftDay, cleaned_data[1]);
     let labels_arr = result_2020[0].concat(result_2021[0]);
@@ -485,11 +529,18 @@ export function simulateMovingAverageChart(data2021, data2020, day_list, stateNa
         datasets: []
     };
 
+    let day_string = String(movingAverageDay);
+
+    if(movingAverageDay === 0) {
+        day_string += " day";
+    } else {
+        day_string += " days"
+    }
 
     for(let i = 0; i < day_list.length; i += 1) {
         let day = day_list[i];
         bar_view.datasets.push({
-            label: getLabel(day , " days moving average"),
+            label: getLabel(day , " days median filter and " + movingAverageDay + " day(s) " +"moving average"),
             backgroundColor: color_list[i % color_list.length],
             borderColor: color_list[i % color_list.length],
             cubicInterpolationMode: 'monotone',
@@ -501,8 +552,10 @@ export function simulateMovingAverageChart(data2021, data2020, day_list, stateNa
 
 
         })
-        let data_filter = movingAverageHelper(data_arr, day, true);
-        bar_view.datasets[i].data = data_filter[0];
+        let data_filter = JSON.parse(JSON.stringify(applyMedianFilter(data_arr, [], day)));
+        let movingAverage = movingAverageHelper(data_filter[0], movingAverageDay, true)
+        bar_view.datasets[i].data = movingAverage[0];
+
     }
 
 
@@ -510,7 +563,11 @@ export function simulateMovingAverageChart(data2021, data2020, day_list, stateNa
     let month_array = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
 
     return (<div>
-        <div className="ui medium label">Historical Cases Per Test (Number of Confirmed Cases / Number of Tests) Center Moving Average</div>
+        <div className="ui large label">Historical CPT days median filter and moving average</div>
+        <div className="ui button" data-tooltip="CPT stands for Cases Per Test (Number of Confirmed Cases / Number of Tests) " data-position="top right">
+            ?
+        </div>
+
         <Line
             data={bar_view}
             options={{
@@ -541,7 +598,15 @@ export function simulateMovingAverageChart(data2021, data2020, day_list, stateNa
                                 let year = split_array[0], month = parseInt(split_array[1]) - 1;
                                 if(!x_axis_container[year + month]){
                                     x_axis_container[year + month] = 1;
-                                    return month_array[month] + " " + year;
+                                    let need_return = true, return_label = month_array[month] + " " + year;
+                                    if(countyMode){
+                                        if(month % 3 !== 0) {
+                                            need_return = false;
+                                        }
+                                    }
+                                    if(need_return){
+                                        return return_label;
+                                    }
                                 }
                                 if(index === ticks.length - 1) {
                                     x_axis_container = {};

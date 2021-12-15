@@ -30,9 +30,15 @@ export function generateColorStateMap(select_date_data){
         if(state_data_row){
             let confirmed = canpraseint(state_data_row['Confirmed']),  total_test_result = canpraseint(state_data_row['Total_Test_Results']);
             if(confirmed && total_test_result) {
+
                 let confirm_rate = parseFloat(confirmed/total_test_result);
+                if(state_data_row["ratio"]){
+
+                    confirm_rate = state_data_row["ratio"];
+                }
                 let percentage_confirm_rate = confirm_rate * 100;
                 let ceil_result = Math.ceil(percentage_confirm_rate/10);
+
                 color_states[key] = {fill: color_list[ceil_result]}
 
             }
@@ -106,3 +112,4 @@ export function states_map (){
         "WY": "Wyoming"
     };
 }
+
